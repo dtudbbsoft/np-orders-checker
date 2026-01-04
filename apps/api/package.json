@@ -1,0 +1,21 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "start": "poetry run uvicorn main:app --host 0.0.0.0 --port 8000",
+    "install": "poetry install",
+    "lint": "poetry run flake8 .",
+    "format": "poetry run black . && poetry run isort .",
+    "type-check": "poetry run mypy .",
+    "test": "poetry run pytest",
+    "db:migrate": "poetry run alembic upgrade head",
+    "db:revision": "poetry run alembic revision --autogenerate",
+    "db:downgrade": "poetry run alembic downgrade -1",
+    "db:history": "poetry run alembic history",
+    "db:current": "poetry run alembic current"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
