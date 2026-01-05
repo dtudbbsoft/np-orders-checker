@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class OrderSchema(BaseModel):
     """Schema for order data."""
@@ -9,6 +10,8 @@ class OrderSchema(BaseModel):
     externalId: str
     status: Optional[str] = None
     description: Optional[str] = None
+    createdAt: datetime
+    updatedAt: datetime
 
     class Config:
         from_attributes = True

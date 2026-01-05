@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from datetime import datetime
 from .order_schema import OrderSchema
 
 class UserSchema(BaseModel):
@@ -11,6 +12,8 @@ class UserSchema(BaseModel):
     phone: Optional[str] = None
     isActive: bool
     orders: List[OrderSchema] = []
+    createdAt: datetime
+    updatedAt: datetime
 
     class Config:
         from_attributes = True

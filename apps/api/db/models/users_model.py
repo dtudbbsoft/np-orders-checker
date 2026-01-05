@@ -2,12 +2,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String, Boolean
 from typing import List, TYPE_CHECKING
 
-from db.base import Base
+from db.base import BaseModel
 
 if TYPE_CHECKING:
     from .user_orders_model import UserOrderModel
 
-class UserModel(Base):
+class UserModel(BaseModel):
     """Model for demo purpose."""
 
     __tablename__ = "user"

@@ -1,9 +1,9 @@
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from db.base import Base
+from db.base import BaseModel
 
-class UserOrderModel(Base):
+class UserOrderModel(BaseModel):
     """Junction table to connect users with their created orders."""
 
     __tablename__ = "user_orders"
