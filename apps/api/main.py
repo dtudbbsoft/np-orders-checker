@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from app.router import router as api_router
+from lifespan import lifespan_setup
 
 app = FastAPI(
     title="NP Orders Checker API",
     description="API for checking Nova Poshta orders",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan_setup
 )
 
 # Configure CORS
@@ -16,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(api_router, prefix="/api/v1", tags=["APIv1"])
 
 
 @app.get("/")

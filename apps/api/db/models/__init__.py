@@ -6,8 +6,9 @@ from pathlib import Path
 # Import all models here to ensure they are registered with SQLAlchemy
 from .users_model import UserModel
 from .orders_model import OrderModel
+from .user_orders_model import UserOrderModel
 
-__all__ = ["UserModel", "OrderModel"]
+__all__ = ["UserModel", "OrderModel", "UserOrderModel"]
 
 
 def load_all_models() -> None:
