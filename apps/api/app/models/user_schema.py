@@ -18,6 +18,11 @@ class UserSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class AllUsersSchema(BaseModel):
+    """Schema for multiple users response."""
+    users: List[UserSchema]
+    total: int
+
 class UserCreateSchema(BaseModel):
     """Schema for creating a new user."""
     name: Optional[str] = None

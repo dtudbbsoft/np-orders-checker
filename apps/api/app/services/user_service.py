@@ -1,18 +1,30 @@
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, func, asc, desc
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.models import (UserModel, OrderModel, UserOrderModel)
-from app.models.user_schema import UserSchema, UserCreateSchema, UserUpdateSchema
+from app.models.user_schema import AllUsersSchema, UserSchema, UserCreateSchema, UserUpdateSchema
 
 class UserService:
     def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
-    async def get_all_users(self):
-        result = await self.db_session.execute(select(UserModel))
-        users = result.scalars().all()
-        return users
+    async def get_all_users(self, limit: int = 10, offset: int = 0, sort_by: str = "id", sort_order: str = "asc") -> AllUsersSchema:
+        query = select(UserModel)
+        if sort_order.lower() == "asc":
+            query = query.order_by(asc(getattr(UserModel, sort_by)))
+        else:
+            query = query.order_by(desc(getattr(UserModel, sort_by)))
+
+        total_result = await self.db_session.execute(
+            select(func.count()).select_from(UserModel)
+        )
+        total_count = total_result.scalar_one()
+
+        result = await self.db_session.execute(
+            query.limit(limit).offset(offset)
+        )
+        return AllUsersSchema(users=[UserSchema.from_orm(user) for user in result.scalars().all()], total=total_count)
     
     async def get_user_by_id(self, user_id: int) -> UserSchema:
         stmt = select(UserModel)\

@@ -13,8 +13,14 @@ async def read_current_user(user_id: int, user_service: UserService = Depends(ge
     return await user_service.get_user_by_id(user_id)
 
 @router.get("/")
-async def read_all_users(user_service: UserService = Depends(get_user_service)):
-    return await user_service.get_all_users()
+async def read_all_users(
+    user_service: UserService = Depends(get_user_service),
+    limit: int = 10,
+    offset: int = 0,
+    sort_by: str = "id",
+    sort_order: str = "asc"
+    ):
+    return await user_service.get_all_users(limit=limit, offset=offset, sort_by=sort_by, sort_order=sort_order)
 
 @router.post("/")
 async def create_user(user_create: UserCreateSchema, user_service: UserService = Depends(get_user_service)):
