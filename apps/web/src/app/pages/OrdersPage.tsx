@@ -11,15 +11,16 @@ import {
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useSession } from 'next-auth/react';
 
-import UserDialog from '../components/users/UserDialog';
-import UserList from '../components/users/UserList';
-import SortControls from '../components/users/SortControls';
-import DeleteUserDialog from '../components/users/DeleteUserDialog';
+import OrderDialog from '../components/orders/OrderDialog';
+import OrderList from '../components/orders/OrderList';
+import SortControls from '../components/orders/SortControls';
+import DeleteOrderDialog from '../components/orders/DeleteOrderDialog';
 import { makeSxStyles } from '../styles/styles';
-import { User, UserForm, UserDialogMode, UserSortBy, UserSortOrder } from '../types/types';
-import { userFormSchema } from '../utils/utils';
-import { createUser, updateUser, deleteUser } from '../api/users/client';
+import { Order, OrderForm, OrderDialogMode, OrderSortBy, OrderSortOrder } from '../types/types';
+import { orderFormSchema } from '../utils/utils';
+import { createOrder, updateOrder, deleteOrder } from '../api/orders/client';
 
 const styles = makeSxStyles({
   container: {
@@ -44,42 +45,43 @@ const styles = makeSxStyles({
   },
 });
 
-const UsersPageComponent: FC = () => {
+const OrdersPageComponent: FC = () => {
+  const { data: session } = useSession();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [sortBy, setSortBy] = useState<UserSortBy>('createdAt');
-  const [order, setOrder] = useState<UserSortOrder>('asc');
+  const [sortBy, setSortBy] = useState<OrderSortBy>('createdAt');
+  const [order, setOrder] = useState<OrderSortOrder>('asc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<UserDialogMode>('add');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [dialogMode, setDialogMode] = useState<OrderDialogMode>('add');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
-  const form = useForm<UserForm>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: { email: '', name: '', phone: '' },
+  const form = useForm<OrderForm>({
+    resolver: zodResolver(orderFormSchema),
+    defaultValues: { externalId: '', name: '', description: '' },
   });
 
   const openDialog = useCallback(
-    (mode: UserDialogMode, user?: User) => {
+    (mode: OrderDialogMode, order?: Order) => {
       setDialogMode(mode);
       setDialogOpen(true);
       setFormError(null);
       setFormLoading(false);
 
-      if (mode === 'edit' && user) {
-        setSelectedUser(user);
-        form.setValue('email', user.email);
-        form.setValue('name', user.name ?? '');
-        form.setValue('phone', user.phone ?? '');
+      if (mode === 'edit' && order) {
+        setSelectedOrder(order);
+        form.setValue('externalId', order.externalId);
+        form.setValue('name', order.name ?? '');
+        form.setValue('description', order.description ?? '');
       } else {
-        setSelectedUser(null);
-        form.reset({ email: '', name: '', phone: '' });
+        setSelectedOrder(null);
+        form.reset({ externalId: '', name: '', description: '' });
       }
     },
     [form]
@@ -87,20 +89,25 @@ const UsersPageComponent: FC = () => {
 
   const closeDialog = useCallback(() => {
     setDialogOpen(false);
-    setSelectedUser(null);
+    setSelectedOrder(null);
     setFormError(null);
     setFormLoading(false);
     form.reset();
   }, [form]);
 
-  const onSubmit = async (data: UserForm): Promise<void> => {
+  const onSubmit = async (data: OrderForm): Promise<void> => {
+    if (!session) {
+      setFormError('No active session');
+      return;
+    }
+
     setFormLoading(true);
     setFormError(null);
     try {
       if (dialogMode === 'add') {
-        await createUser(data);
-      } else if (selectedUser) {
-        await updateUser(selectedUser.id, data);
+        await createOrder(session, data);
+      } else if (selectedOrder) {
+        await updateOrder(session, selectedOrder.id, data);
       }
       setDialogOpen(false);
       setRefreshKey((k) => k + 1);
@@ -111,39 +118,39 @@ const UsersPageComponent: FC = () => {
     }
   };
 
-  const openDeleteDialog = (user: User) => {
-    setUserToDelete(user);
+  const openDeleteDialog = (order: Order) => {
+    setOrderToDelete(order);
     setDeleteDialogOpen(true);
   };
 
   const closeDeleteDialog = () => {
-    setUserToDelete(null);
+    setOrderToDelete(null);
     setDeleteDialogOpen(false);
   };
 
   const confirmDelete = async () => {
-    if (!userToDelete) return;
+    if (!orderToDelete || !session) return;
 
     try {
-      await deleteUser(userToDelete.id);
+      await deleteOrder(session, orderToDelete.id);
       setRefreshKey((k) => k + 1);
     } catch (err) {
-      console.error('[UsersPage] Delete user error:', err);
+      console.error('[OrdersPage] Delete order error:', err);
       alert((err as Error).message);
     } finally {
       closeDeleteDialog();
     }
   };
 
-  const handleSortChange = (newSortBy: UserSortBy, newOrder: UserSortOrder) => {
+  const handleSortChange = (newSortBy: OrderSortBy, newOrder: OrderSortOrder) => {
     setSortBy(newSortBy);
     setOrder(newOrder);
   };
 
   return (
     <Container maxWidth="lg" sx={styles.container}>
-      <Typography variant="h4" component="h1" id="users-heading" gutterBottom>
-        Users
+      <Typography variant="h4" component="h1" id="orders-heading" gutterBottom>
+        Orders
       </Typography>
 
       <Box sx={styles.controlsBar}>
@@ -151,10 +158,10 @@ const UsersPageComponent: FC = () => {
           variant="contained"
           color="primary"
           onClick={() => openDialog('add')}
-          aria-label="Add a new user"
+          aria-label="Add a new order"
           sx={styles.addButton}
         >
-          Add User
+          Add Order
         </Button>
         <SortControls sortBy={sortBy} order={order} onChange={handleSortChange} />
       </Box>
@@ -168,21 +175,21 @@ const UsersPageComponent: FC = () => {
           shape="rounded"
           showFirstButton
           showLastButton
-          aria-label="User list pagination"
+          aria-label="Order list pagination"
         />
       </Box>
 
-      <UserList
+      <OrderList
         key={`${refreshKey}-${sortBy}-${order}-${page}`}
         sortBy={sortBy}
         order={order}
         page={page}
         onTotalPagesChange={setTotalPages}
-        onEdit={(user: User) => openDialog('edit', user)}
-        onDelete={(user: User) => openDeleteDialog(user)}
+        onEdit={(order: Order) => openDialog('edit', order)}
+        onDelete={(order: Order) => openDeleteDialog(order)}
       />
 
-      <UserDialog
+      <OrderDialog
         open={dialogOpen}
         mode={dialogMode}
         form={form}
@@ -192,9 +199,9 @@ const UsersPageComponent: FC = () => {
         onSubmit={form.handleSubmit(onSubmit)}
       />
 
-      <DeleteUserDialog
+      <DeleteOrderDialog
         open={deleteDialogOpen}
-        user={userToDelete}
+        order={orderToDelete}
         onClose={closeDeleteDialog}
         onConfirm={confirmDelete}
       />
@@ -202,4 +209,4 @@ const UsersPageComponent: FC = () => {
   );
 };
 
-export default dynamic(() => Promise.resolve(UsersPageComponent), { ssr: false });
+export default dynamic(() => Promise.resolve(OrdersPageComponent), { ssr: false });

@@ -8,7 +8,7 @@ export async function PATCH(
 ): Promise<NextResponse> {
     try {
 const { id } = await context.params;
-    const backendUrl = `${DEFAULT_BACKEND_URL}/users/${id}`;
+    const backendUrl = `${DEFAULT_BACKEND_URL}/users`;
 
     const body = await req.json();
     const res = await fetch(backendUrl, {

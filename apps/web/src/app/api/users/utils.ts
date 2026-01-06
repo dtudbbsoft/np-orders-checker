@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { UsersApiResponse } from './types';
 
 /**
  * Logs errors for monitoring.
@@ -45,36 +44,3 @@ export const createUserSchema = z.object({
   name: z.string().max(100).optional(),
   phone: z.string().max(20).optional(),
 });
-
-/**
- * Fetches users from the backend API.
- * @param params - Query parameters for pagination and sorting
- * @returns UsersApiResponse
- * @throws Error if backend responds with non-OK status or invalid data
- */
-export async function fetchUsersFromBackend(params: z.infer<typeof querySchema>): Promise<UsersApiResponse> {
-  const url = new URL('api/v1/users', process.env.API_URL ?? 'http://localhost:8000');
-  url.searchParams.set('page', String(params.page));
-  url.searchParams.set('pageSize', String(params.pageSize));
-  url.searchParams.set('sortBy', params.sortBy);
-  url.searchParams.set('order', params.order);
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    logError(`[API /users] Backend error: ${response.status} ${response.statusText} - ${errorText}`);
-    throw new Error(`Backend responded with status ${response.status}: ${errorText}`);
-  }
-
-  const data = await response.json();
-  const parsed = backendResponseSchema.safeParse(data);
-  if (!parsed.success) {
-    logError(parsed.error);
-    throw new Error('Invalid backend response format');
-  }
-  return parsed.data;
-}

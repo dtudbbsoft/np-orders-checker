@@ -40,10 +40,24 @@ class UserService:
     
         return UserSchema.from_orm(user)
     
-    async def create_user(self, user_create: UserCreateSchema) -> UserSchema:
+    async def get_user_by_email(self, email: str) -> UserSchema:
+        stmt = select(UserModel)\
+            .join(UserOrderModel, UserModel.id == UserOrderModel.UserId, isouter=True)\
+            .join(OrderModel, UserOrderModel.OrderId == OrderModel.id, isouter=True)\
+            .where(UserModel.email == email)
+        
+        result = await self.db_session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+        return UserSchema.from_orm(user)
+
+    async def create_user(self, email: str, user_create: UserCreateSchema) -> UserSchema:
         try:
             new_user = UserModel(
-                email=user_create.email,
+                email=email,
                 name=user_create.name,
                 phone=user_create.phone,
                 isActive=False
@@ -85,19 +99,20 @@ class UserService:
             await self.db_session.rollback()
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
-    async def update_user(self, user_id: int, user_update: UserUpdateSchema) -> UserSchema:
+    async def update_user(self, email: str, user_update: UserUpdateSchema) -> UserSchema:
         try:
-            stmt = select(UserModel).where(UserModel.id == user_id)
+            stmt = select(UserModel).where(UserModel.email == email)
             result = await self.db_session.execute(stmt)
             user = result.scalar_one_or_none()
 
             if not user:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-            user.name = user_update.name
-            user.phone = user_update.phone
+            update_data = user_update.model_dump(exclude_unset=True)
 
-            self.db_session.add(user)
+            for field, value in update_data.items():
+                setattr(user, field, value)
+
             await self.db_session.commit()
             await self.db_session.refresh(user)
 
@@ -129,9 +144,9 @@ class UserService:
             await self.db_session.rollback()
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
-    async def delete_user(self, user_id: int) -> None:
+    async def delete_user(self, email: str) -> None:
         try:
-            stmt = select(UserModel).where(UserModel.id == user_id)
+            stmt = select(UserModel).where(UserModel.email == email)
             result = await self.db_session.execute(stmt)
             user = result.scalar_one_or_none()
 

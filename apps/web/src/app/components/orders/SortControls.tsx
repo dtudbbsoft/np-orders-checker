@@ -3,7 +3,7 @@
 import React, { FC, useCallback } from 'react';
 import { Box, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 
-import { UserSortBy, UserSortOrder } from '../../types/types';
+import { OrderSortBy, OrderSortOrder } from '../../types/types';
 import { SORT_OPTIONS, ORDER_OPTIONS } from '../../utils/constants';
 import { makeSxStyles } from '../../styles/styles';
 
@@ -26,25 +26,25 @@ const styles = makeSxStyles({
  * Props for SortControls.
  */
 interface SortControlsProps {
-  sortBy: UserSortBy;
-  order: UserSortOrder;
-  onChange: (sortBy: UserSortBy, order: UserSortOrder) => void;
+  sortBy: OrderSortBy;
+  order: OrderSortOrder;
+  onChange: (sortBy: OrderSortBy, order: OrderSortOrder) => void;
 }
 
 /**
- * Sorting controls for the user list.
+ * Sorting controls for the order list.
  */
 const SortControls: FC<SortControlsProps> = ({ sortBy, order, onChange }) => {
   const handleSortChange = useCallback(
-    (event: SelectChangeEvent<UserSortBy>) => {
-      onChange(event.target.value as UserSortBy, order);
+    (event: SelectChangeEvent<OrderSortBy>) => {
+      onChange(event.target.value as OrderSortBy, order);
     },
     [onChange, order]
   );
 
   const handleOrderChange = useCallback(
-    (event: SelectChangeEvent<UserSortOrder>) => {
-      onChange(sortBy, event.target.value as UserSortOrder);
+    (event: SelectChangeEvent<OrderSortOrder>) => {
+      onChange(sortBy, event.target.value as OrderSortOrder);
     },
     [onChange, sortBy]
   );

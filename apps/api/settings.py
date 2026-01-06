@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     # Database settings
     database_url: str = "sqlite:///./np_orders.db"
     db_connection_uri: str = "sqlite+aiosqlite:///./np_orders.db"
+    google_client_id: str = ""
     echo: bool = False  # Set to True for SQL query logging
     
     model_config = SettingsConfigDict(

@@ -1,15 +1,13 @@
 import { z } from 'zod';
 
-/** Zod schema for user form validation */
-export const userFormSchema = z.object({
-  email: z.email({
-    message: "This is not a valid email address",
-  }),
+/** Zod schema for order form validation */
+export const orderFormSchema = z.object({
+  externalId: z.string().min(1, 'Your parcel ID is required'),
   name: z.string().optional(),
-  phone: z.string().optional(),
+  description: z.string().optional(),
 });
 
-export type UserForm = z.infer<typeof userFormSchema>;
+export type OrderForm = z.infer<typeof orderFormSchema>;
 
 /**
  * Calculate the total number of pages based on the total items and page size.

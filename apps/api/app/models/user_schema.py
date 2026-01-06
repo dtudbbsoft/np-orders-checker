@@ -26,7 +26,6 @@ class AllUsersSchema(BaseModel):
 class UserCreateSchema(BaseModel):
     """Schema for creating a new user."""
     name: Optional[str] = None
-    email: EmailStr
     phone: Optional[str] = None
 
 class UserUpdateSchema(BaseModel):

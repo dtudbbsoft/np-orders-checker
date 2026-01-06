@@ -1,28 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { querySchema, createUserSchema, fetchUsersFromBackend, logError } from './utils';
+import { createUserSchema, logError } from './utils';
 import { DEFAULT_BACKEND_URL } from '../../utils/constants';
-
-export async function GET(req: NextRequest): Promise<NextResponse> {
-  try {
-    const parsedQuery = querySchema.safeParse(Object.fromEntries(req.nextUrl.searchParams));
-    if (!parsedQuery.success) {
-      return NextResponse.json(
-        { error: 'Invalid query parameters', details: parsedQuery.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const usersResponse = await fetchUsersFromBackend(parsedQuery.data);
-
-    return NextResponse.json(usersResponse, { status: 200 });
-  } catch (error) {
-    logError(`[GET /users] Error: ${error}`);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch users' },
-      { status: 500 }
-    );
-  }
-}
 
 /**
  * POST /api/v1/users - Creates a new user.

@@ -1,6 +1,7 @@
-import { User, UserForm, UserSortBy, UserSortOrder } from '../../types/types';
-import { DEFAULT_BACKEND_URL, PAGE_SIZE } from '../../utils/constants';
-import { calculateTotalPages } from '../../utils/utils';
+import { Session } from 'next-auth';
+import { User, UserForm } from '../../types/types';
+import { DEFAULT_BACKEND_URL } from '../../utils/constants';
+import { getAuthHeadersForFetch } from '../../utils/auth';
 
 export interface FetchUsersResponse {
   users: User[];
@@ -8,50 +9,34 @@ export interface FetchUsersResponse {
 }
 
 /**
- * Fetches the list of users with pagination and sorting.
- * @param page - Current page number
- * @param sortBy - Sorting field
- * @param order - Sorting order
- * @returns A promise resolving to the users and total pages
+ * Gets the current user profile
+ * @param session - Next-auth session object
+ * @returns A promise resolving to the current user
  */
-export const fetchUsers = async (
-  page: number,
-  sortBy: UserSortBy,
-  order: UserSortOrder
-): Promise<FetchUsersResponse> => {
-  const params = new URLSearchParams({
-    offset: String((page - 1) * PAGE_SIZE),
-    limit: String(PAGE_SIZE),
-    sortBy,
-    order,
-  });
-
-  const res = await fetch(`${DEFAULT_BACKEND_URL}/users?${params.toString()}`, {
+export const getCurrentUser = async (session: Session | null): Promise<User> => {
+  const headers = getAuthHeadersForFetch(session);
+  const res = await fetch(`${DEFAULT_BACKEND_URL}/users/me`, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers,
   });
-
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Failed to fetch users: ${errorText}`);
+    const errData = await res.json();
+    throw new Error(errData?.message || 'Failed to fetch current user');
   }
-
-  const data = await res.json();
-  return {
-    users: data.users,
-    totalPages: calculateTotalPages(data.total, PAGE_SIZE),
-  };
+  return res.json();
 };
 
 /**
  * Creates a new user.
+ * @param session - Next-auth session object
  * @param data - User form data
  * @returns A promise resolving to the created user
  */
-export const createUser = async (data: UserForm): Promise<User> => {
+export const createUser = async (session: Session | null, data: UserForm): Promise<User> => {
+  const headers = getAuthHeadersForFetch(session);
   const res = await fetch(`${DEFAULT_BACKEND_URL}/users`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -63,14 +48,16 @@ export const createUser = async (data: UserForm): Promise<User> => {
 
 /**
  * Updates an existing user.
+ * @param session - Next-auth session object
  * @param id - User ID
  * @param data - User form data
  * @returns A promise resolving to the updated user
  */
-export const updateUser = async (id: string, data: UserForm): Promise<User> => {
+export const updateUser = async (session: Session | null, id: string, data: UserForm): Promise<User> => {
+  const headers = getAuthHeadersForFetch(session);
   const res = await fetch(`${DEFAULT_BACKEND_URL}/users/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -81,14 +68,56 @@ export const updateUser = async (id: string, data: UserForm): Promise<User> => {
 };
 
 /**
+ * Updates the current user's profile.
+ * @param session - Next-auth session object
+ * @param data - User form data (excluding email)
+ * @returns A promise resolving to the updated user
+ */
+export const updateCurrentUser = async (session: Session | null, data: Omit<UserForm, 'email'>): Promise<User> => {
+  const headers = getAuthHeadersForFetch(session);
+  const res = await fetch(`${DEFAULT_BACKEND_URL}/users/me`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errData = await res.json();
+    throw new Error(errData?.message || 'Failed to update profile');
+  }
+  return res.json();
+};
+
+/**
  * Deletes a user by ID.
+ * @param session - Next-auth session object
  * @param id - User ID
  * @returns A promise resolving to void
  */
-export const deleteUser = async (id: string): Promise<void> => {
-  const res = await fetch(`${DEFAULT_BACKEND_URL}/users/${id}`, { method: 'DELETE' });
+export const deleteUser = async (session: Session | null, id: string): Promise<void> => {
+  const headers = getAuthHeadersForFetch(session);
+  const res = await fetch(`${DEFAULT_BACKEND_URL}/users/${id}`, { 
+    method: 'DELETE',
+    headers 
+  });
   if (!res.ok) {
     const errData = await res.json();
     throw new Error(errData?.message || 'Failed to delete user');
+  }
+};
+
+/**
+ * Deletes the current user's account.
+ * @param session - Next-auth session object
+ * @returns A promise resolving to void
+ */
+export const deleteCurrentUser = async (session: Session | null): Promise<void> => {
+  const headers = getAuthHeadersForFetch(session);
+  const res = await fetch(`${DEFAULT_BACKEND_URL}/users/me`, { 
+    method: 'DELETE',
+    headers 
+  });
+  if (!res.ok) {
+    const errData = await res.json();
+    throw new Error(errData?.message || 'Failed to delete account');
   }
 };

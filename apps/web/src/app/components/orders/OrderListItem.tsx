@@ -3,7 +3,7 @@
 import React from 'react';
 import { Paper, Typography, Button, Box } from '@mui/material';
 
-import { User } from '../../types/types';
+import { Order } from '../../types/types';
 import { formatDate } from '../../utils/utils';
 import { makeSxStyles } from '../../styles/styles';
 
@@ -42,38 +42,38 @@ const styles = makeSxStyles({
   },
 });
 
-interface UserListItemProps {
-  user: User;
-  onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
+interface OrderListItemProps {
+  order: Order;
+  onEdit: (order: Order) => void;
+  onDelete: (order: Order) => void;
 }
 
-const UserListItem: React.FC<UserListItemProps> = ({ user, onEdit, onDelete }) => {
-  const formattedDate = formatDate(user.createdAt);
+const OrderListItem: React.FC<OrderListItemProps> = ({ order, onEdit, onDelete }) => {
+  const formattedDate = formatDate(order.createdAt);
 
   return (
     <Paper
       sx={styles.paper}
       role="article"
-      aria-labelledby={`user-title-${user.id}`}
-      aria-describedby={`user-description-${user.id}`}
+      aria-labelledby={`order-title-${order.id}`}
+      aria-describedby={`order-description-${order.id}`}
     >
       <Box>
         <Box sx={styles.boxContainer}>
-          <Typography variant="body2" id={`user-title-${user.id}`} sx={styles.title}>
-            {user.email}
+          <Typography variant="body2" id={`order-title-${order.id}`} sx={styles.title}>
+            {order.externalId}
           </Typography>
         </Box>
 
-        {user.name && (
-          <Typography variant="caption" color="textSecondary" id={`user-name-${user.id}`} sx={styles.description}>
-            {user.name}
+        {order.name && (
+          <Typography variant="caption" color="textSecondary" id={`order-name-${order.id}`} sx={styles.description}>
+            {order.name}
           </Typography>
         )}
 
-        {user.phone && (
-          <Typography variant="caption" color="textSecondary" id={`user-phone-${user.id}`} sx={styles.description}>
-            {user.phone}
+        {order.description && (
+          <Typography variant="caption" color="textSecondary" id={`order-description-${order.id}`} sx={styles.description}>
+            {order.description}
           </Typography>
         )}
 
@@ -86,8 +86,8 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, onEdit, onDelete }) =
               variant="outlined"
               size="small"
               color="primary"
-              onClick={() => onEdit(user)}
-              aria-label={`Edit user: ${user.email}`}
+              onClick={() => onEdit(order)}
+              aria-label={`Edit order: ${order.name || order.externalId}`}
               sx={styles.button}
             >
               Edit
@@ -96,8 +96,8 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, onEdit, onDelete }) =
               variant="outlined"
               size="small"
               color="error"
-              onClick={() => onDelete(user)}
-              aria-label={`Delete user: ${user.email}`}
+              onClick={() => onDelete(order)}
+              aria-label={`Delete order: ${order.name || order.externalId}`}
               sx={styles.button}
             >
               Delete
@@ -109,4 +109,4 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, onEdit, onDelete }) =
   );
 };
 
-export default UserListItem;
+export default OrderListItem;
